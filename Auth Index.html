@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shop Bod Gaming — Đăng nhập / Đăng ký</title>
+  <style>
+    *{box-sizing:border-box}body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;margin:0;background:#f5f7fb;color:#111}
+    .top{background:#0b1226;color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#ff6b6b,#feca57);display:flex;align-items:center;justify-content:center;font-weight:700;color:#111}
+    .nav{display:flex;gap:10px}
+    .btn{padding:8px 12px;border-radius:8px;border:none;background:#0b1226;color:#fff;cursor:pointer}
+    .container{max-width:920px;margin:20px auto;padding:16px}
+    .card{background:#fff;padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(10,10,10,0.06)}
+    .wallet{background:#fff;padding:12px;border-radius:8px;margin-top:12px;border:1px solid #eef2f6}
+
+    /* modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.55);display:flex;align-items:center;justify-content:center;padding:18px}
+    .modal{width:100%;max-width:520px;background:#fff;padding:18px;border-radius:12px}
+    .tabs{display:flex;border-radius:8px;overflow:hidden;border:1px solid #e6e7ee}
+    .tab{flex:1;text-align:center;padding:10px;background:#fff;cursor:pointer}
+    .tab.active{background:#0b1226;color:#fff}
+    input,select{width:100%;padding:10px;border:1px solid #e6e7ee;border-radius:8px;margin-bottom:8px}
+    .muted{color:#6b7280;font-size:14px}
+    .row{display:flex;gap:8px}
+    @media (max-width:600px){.row{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <div class="logo">SB</div>
+      <div>
+        <div style="font-weight:700">Shop Bod Gaming</div>
+        <div class="muted">Mua bán Acc & Robux</div>
+      </div>
+    </div>
+    <div class="nav">
+      <button class="btn" id="authBtn">Đăng nhập / Đăng ký</button>
+      <button class="btn" id="logoutBtn" style="display:none;background:#e74c3c">Đăng xuất</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="card">
+      <h2>Xin chào!</h2>
+      <p class="muted">Bấm vào <strong>Đăng nhập / Đăng ký</strong> để tạo tài khoản hoặc đăng nhập. Nếu bạn đã có tài khoản, trang sẽ hiển thị ví (mặc định 0k).</p>
+
+      <div id="walletBox" class="wallet">Chưa đăng nhập</div>
+
+      <div style="margin-top:12px">
+        <button class="btn" id="demoAdd">Thêm tài khoản demo</button>
+      </div>
+    </div>
+  </main>
+
+  <template id="authTpl">
+    <div class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 id="modalTitle">Đăng nhập / Đăng ký</h3>
+          <button class="btn" id="closeAuth">Đóng</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <div class="tabs">
+            <div class="tab active" data-tab="login">Đăng nhập</div>
+            <div class="tab" data-tab="reg">Đăng ký</div>
+          </div>
+
+          <div id="loginPane" style="margin-top:12px">
+            <input id="loginUser" placeholder="Tên đăng nhập" />
+            <input id="loginPass" type="password" placeholder="Mật khẩu" />
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="doLogin">Đăng nhập</button>
+              <button class="btn" id="forgotBtn" style="background:#6b7280">Quên mật khẩu (tạm)</button>
+            </div>
+          </div>
+
+          <div id="regPane" style="display:none;margin-top:12px">
+            <input id="regUser" placeholder="Tên đăng ký" />
+            <input id="regPass" type="password" placeholder="Mật khẩu" />
+            <input id="regEmail" placeholder="Email (không bắt buộc)" />
+            <div style="display:flex;gap:8px">
+              <button class="btn" id="doReg">Tạo tài khoản</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    // Simple localStorage DB keys
+    const DB = {usersKey: 'sb_users', sessionKey: 'sb_session'};
+    function loadJSON(k, f){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):f }catch(e){return f} }
+    function saveJSON(k,o){ localStorage.setItem(k, JSON.stringify(o)) }
+
+    let users = loadJSON(DB.usersKey, []);
+    let session = loadJSON(DB.sessionKey, null);
+
+    const authBtn = document.getElementById('authBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const walletBox = document.getElementById('walletBox');
+
+    function renderWallet(){
+      session = loadJSON(DB.sessionKey, null);
+      if(!session){ walletBox.innerHTML = 'Chưa đăng nhập'; logoutBtn.style.display='none'; return }
+      users = loadJSON(DB.usersKey, []);
+      const me = users.find(u=>u.username===session.username);
+      if(!me){ walletBox.innerHTML = 'Chưa đăng nhập'; logoutBtn.style.display='none'; localStorage.removeItem(DB.sessionKey); return }
+      walletBox.innerHTML = `<strong>${me.username}</strong><div class="muted">Số dư: ${me.wallet||0}k</div><div class="muted">Tạo: ${me.createdAt||''}</div>`;
+      logoutBtn.style.display='inline-block';
+    }
+
+    function openAuth(){
+      const tpl = document.getElementById('authTpl');
+      const node = tpl.content.cloneNode(true);
+      const back = node.querySelector('.modal-backdrop');
+      document.body.appendChild(back);
+
+      // tabs
+      const tabs = back.querySelectorAll('.tab');
+      const loginPane = back.querySelector('#loginPane');
+      const regPane = back.querySelector('#regPane');
+      tabs.forEach(t=>t.addEventListener('click', ()=>{
+        tabs.forEach(x=>x.classList.remove('active'));
+        t.classList.add('active');
+        if(t.dataset.tab==='login'){ loginPane.style.display='block'; regPane.style.display='none' }
+        else { loginPane.style.display='none'; regPane.style.display='block' }
+      }));
+
+      back.querySelector('#closeAuth').onclick = ()=>back.remove();
+
+      // register
+      back.querySelector('#doReg').onclick = ()=>{
+        const u = back.querySelector('#regUser').value.trim();
+        const p = back.querySelector('#regPass').value;
+        const e = back.querySelector('#regEmail').value.trim();
+        if(!u||!p){ alert('Nhập tên và mật khẩu.'); return }
+        users = loadJSON(DB.usersKey, []);
+        if(users.find(x=>x.username===u)){ alert('Tên đăng nhập đã tồn tại'); return }
+        const newUser = { username:u, password:p, email:e||'', wallet:0, createdAt: new Date().toLocaleString() };
+        users.push(newUser); saveJSON(DB.usersKey, users);
+        // auto login after register
+        saveJSON(DB.sessionKey, {username:u});
+        alert('Đăng ký thành công! Đã đăng nhập tự động. Ví bắt đầu 0k.');
+        back.remove(); renderWallet();
+      }
+
+      // login
+      back.querySelector('#doLogin').onclick = ()=>{
+        const u = back.querySelector('#loginUser').value.trim();
+        const p = back.querySelector('#loginPass').value;
+        users = loadJSON(DB.usersKey, []);
+        const me = users.find(x=>x.username===u && x.password===p);
+        if(!me){ alert('Tài khoản hoặc mật khẩu không đúng'); return }
+        saveJSON(DB.sessionKey, {username:me.username});
+        alert('Đăng nhập thành công');
+        back.remove(); renderWallet();
+      }
+
+      // forgot (placeholder)
+      back.querySelector('#forgotBtn').onclick = ()=> alert('Tạm thời không hỗ trợ khôi phục mật khẩu trong phiên bản này.');
+    }
+
+    authBtn.onclick = openAuth;
+    logoutBtn.onclick = ()=>{ localStorage.removeItem(DB.sessionKey); renderWallet(); alert('Đã đăng xuất'); }
+
+    // demo: add a sample user
+    document.getElementById('demoAdd').onclick = ()=>{
+      users = loadJSON(DB.usersKey, []);
+      const u = 'demo' + Math.floor(Math.random()*9000+1000);
+      users.push({username:u, password:'1234', wallet:0, email:'', createdAt:new Date().toLocaleString()});
+      saveJSON(DB.usersKey, users);
+      alert('Tạo tài khoản demo: ' + u + ' / 1234 (ví 0k)');
+    }
+
+    // initial render
+    renderWallet();
+  </script>
+</body>
+</html>
