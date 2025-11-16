@@ -1,0 +1,53 @@
+.card-img-top {
+    width: 100%;         /* full ngang card */
+    aspect-ratio: 16/9;  /* giữ tỉ lệ 16:9 */
+    object-fit: cover;    /* cắt phần thừa, không méo */
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    overflow: hidden; /* để viền, ảnh không tràn */
+    border-radius: 10px;
+}
+
+.card:hover {
+    transform: translateY(-5px); /* nâng nhẹ card */
+    box-shadow: 0 15px 25px rgba(0,0,0,0.2); /* bóng đổ */
+}
+
+.card-img-top {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.3s ease, border 0.3s ease;
+}
+
+/* Khi hover/chạm, ảnh phóng to + viền */
+.card:hover .card-img-top {
+    transform: scale(1.08);       /* phóng to nhẹ */
+    border: 3px solid #007bff;    /* viền xanh nổi bật */
+}
+
+/* Button hover */
+.card .btn {
+    transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.card:hover .btn {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Responsive: trên mobile, hover bị chạm */
+@media (max-width: 768px) {
+    .card:hover {
+        transform: none; 
+        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+    }
+    .card:hover .card-img-top {
+        transform: scale(1.05);
+    }
+}
